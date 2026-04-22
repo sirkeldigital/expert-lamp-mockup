@@ -38,6 +38,22 @@
       </div>
     </div>
 
+    <!-- Map Style Switcher -->
+    <div class="absolute top-14 right-3 z-[1000] card" style="padding:0;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+      <div class="grid grid-cols-5 gap-0.5 p-1">
+        <button v-for="mode in mapModes" :key="mode.id"
+          @click="switchMapMode(mode.id)"
+          class="px-2 py-1.5 rounded-[var(--radius-field-sm)] text-[9px] font-semibold transition text-center"
+          :style="activeMapMode === mode.id
+            ? 'background:var(--color-primary);color:white'
+            : 'background:transparent;color:inherit;opacity:0.6'"
+          @mouseenter="activeMapMode !== mode.id &amp;&amp; ($event.currentTarget.style.background='var(--color-base-200)')"
+          @mouseleave="activeMapMode !== mode.id &amp;&amp; ($event.currentTarget.style.background='transparent')">
+          {{ mode.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Bottom Legend -->
     <div class="card absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-4 px-3 py-1.5 z-[1000]" style="box-shadow:0 2px 8px rgba(0,0,0,0.1)">
       <div class="flex items-center gap-1.5 text-[10px]"><span class="w-3 h-2 rounded-sm" style="background:rgba(238,48,50,0.35);border:1px solid rgba(238,48,50,0.5)"></span> Area Bencana</div>
@@ -51,6 +67,7 @@
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import L from 'leaflet'
 import 'leaflet.heat'
+import 'leaflet-relief'
 import { selectedDisaster, mapRef } from '../store.js'
 import { generateHeatmap, generateSensors } from '../data/disasters.js'
 
@@ -58,6 +75,40 @@ const mapContainer = ref(null)
 const showFilters = ref(true)
 let mapInstance = null
 const layerGroups = {}
+let activeTileLayer = null
+let reliefLayer = null
+const activeMapMode = ref('satellite')
+
+const mapModes = [
+  { id: 'satellite', label: 'Satellite', url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', maxZoom: 20 },
+  { id: 'terrain', label: 'Terrain', url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png', maxZoom: 18 },
+  { id: 'topo', label: 'Topo', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', maxZoom: 17 },
+  { id: 'dem', label: 'DEM' },
+  { id: 'dark', label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', maxZoom: 20 },
+  { id: 'night', label: 'Night', url: 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg', maxZoom: 8 },
+  { id: 'esri', label: 'Esri', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', maxZoom: 19 },
+  { id: 'watercolor', label: 'Watercolor', url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', maxZoom: 16 },
+  { id: 'hillshade', label: 'Hillshade' },
+]
+
+function switchMapMode(modeId) {
+  if (!mapInstance || activeMapMode.value === modeId) return
+  activeMapMode.value = modeId
+
+  if (reliefLayer) { mapInstance.removeLayer(reliefLayer); reliefLayer = null }
+  if (activeTileLayer) mapInstance.removeLayer(activeTileLayer)
+
+  if (modeId === 'dem') {
+    activeTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(mapInstance)
+    reliefLayer = new L.GridLayer.Relief({ mode: 'slope', opacity: 0.55, slopeColorScheme: 'earth' }).addTo(mapInstance)
+  } else if (modeId === 'hillshade') {
+    activeTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(mapInstance)
+    reliefLayer = new L.GridLayer.Relief({ mode: 'hillshade', opacity: 0.45 }).addTo(mapInstance)
+  } else {
+    const mode = mapModes.find(m => m.id === modeId)
+    activeTileLayer = L.tileLayer(mode.url, { maxZoom: mode.maxZoom }).addTo(mapInstance)
+  }
+}
 
 const d = computed(() => selectedDisaster.value)
 
@@ -82,7 +133,7 @@ function toggleLayer(layer) {
 }
 
 function createIcon(type) {
-  const cfg = { bridge:{bg:'#ee3032',t:'!',s:26}, truck:{bg:'#025097',t:'\u25B6',s:20}, excavator:{bg:'#d97706',t:'\u2692',s:20}, house:{bg:'#ee3032',t:'\u25B2',s:18}, warning:{bg:'#f59e0b',t:'!',s:24} }
+  const cfg = { bridge:{bg:'#ee3032',t:'!',s:26}, truck:{bg:'#025097',t:'\u25B6',s:20}, excavator:{bg:'#d97706',t:'\u2692',s:20}, house:{bg:'#ee3032',t:'\u25B2',s:18}, warning:{bg:'#f59e0b',t:'!',s:24}, traffic:{bg:'#ef4444',t:'\u25A0',s:22}, road_damage:{bg:'#b91c1c',t:'\u2716',s:22} }
   const c = cfg[type]||cfg.warning
   return L.divIcon({ className:'custom-marker', html:`<div style="width:${c.s}px;height:${c.s}px;background:${c.bg};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${c.s*0.4}px;color:white;box-shadow:0 1px 4px rgba(0,0,0,0.3);border:2px solid white;cursor:pointer">${c.t}</div>`, iconSize:[c.s,c.s], iconAnchor:[c.s/2,c.s/2] })
 }
@@ -166,7 +217,7 @@ onMounted(() => {
   const map = L.map(mapContainer.value, { center: d.value.center, zoom: d.value.zoom, zoomControl: false, attributionControl: false })
   mapInstance = map
   mapRef.value = map
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map)
+  activeTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(map)
   L.control.zoom({ position: 'topright' }).addTo(map)
   renderDisaster()
 })
