@@ -40,7 +40,7 @@
 
     <!-- Map Style Switcher -->
     <div class="absolute top-14 right-3 z-[1000] card" style="padding:0;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
-      <div class="grid grid-cols-5 gap-0.5 p-1">
+      <div class="grid grid-cols-7 gap-0.5 p-1">
         <button v-for="mode in mapModes" :key="mode.id"
           @click="switchMapMode(mode.id)"
           class="px-2 py-1.5 rounded-[var(--radius-field-sm)] text-[9px] font-semibold transition text-center"
@@ -89,6 +89,11 @@ const mapModes = [
   { id: 'esri', label: 'Esri', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', maxZoom: 19 },
   { id: 'roads', label: 'Roads', url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', maxZoom: 20 },
   { id: 'hillshade', label: 'Hillshade' },
+  { id: 'hot', label: 'HOT', url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', maxZoom: 19 },
+  { id: 'shaded', label: 'Shaded', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', maxZoom: 13 },
+  { id: 'ocean', label: 'Ocean', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', maxZoom: 13 },
+  { id: 'natgeo', label: 'NatGeo', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', maxZoom: 16 },
+  { id: 'light', label: 'Light', url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', maxZoom: 20 },
 ]
 
 function switchMapMode(modeId) {
