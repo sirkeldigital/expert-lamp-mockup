@@ -81,13 +81,13 @@ const activeMapMode = ref('satellite')
 
 const mapModes = [
   { id: 'satellite', label: 'Satellite', url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', maxZoom: 20 },
-  { id: 'terrain', label: 'Terrain', url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png', maxZoom: 18 },
+  { id: 'terrain', label: 'Terrain', url: 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', maxZoom: 20 },
   { id: 'topo', label: 'Topo', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', maxZoom: 17 },
   { id: 'dem', label: 'DEM' },
   { id: 'dark', label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', maxZoom: 20 },
   { id: 'night', label: 'Night', url: 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg', maxZoom: 8 },
   { id: 'esri', label: 'Esri', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', maxZoom: 19 },
-  { id: 'watercolor', label: 'Watercolor', url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', maxZoom: 16 },
+  { id: 'roads', label: 'Roads', url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', maxZoom: 20 },
   { id: 'hillshade', label: 'Hillshade' },
 ]
 
